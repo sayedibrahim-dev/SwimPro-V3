@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>SwimPro | إدارة الأبطال</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0a0f1d; --card: #161d2f; --accent: #3b82f6; --text: #f8fafc; --danger: #ef4444; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 950px; margin: auto; }
+        .hero { text-align: center; padding: 40px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 30px; margin-bottom: 30px; }
+        .glass-card { background: var(--card); border-radius: 24px; padding: 30px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); }
+        h2 { color: var(--accent); margin-bottom: 20px; }
+        input, select, textarea { width: 100%; background: #1e293b; border: 2px solid transparent; border-radius: 12px; padding: 14px; color: white; margin-bottom: 15px; outline: none; }
+        input:focus { border-color: var(--accent); }
+        .btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%; transition: 0.3s; }
+        .swimmer-item { display: flex; gap: 10px; margin-bottom: 10px; }
+        .swimmer-row { flex-grow: 1; display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 18px; border-radius: 16px; text-decoration: none; color: white; transition: 0.3s; }
+        .swimmer-row:hover { background: #26334d; border-right: 5px solid var(--accent); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: right; padding: 12px; color: #64748b; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .del-link { color: var(--danger); text-decoration: none; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1 style="font-weight: 900; font-size: 2.5rem;">SWIMPRO <span style="color:#161d2f">V3.9</span></h1>
+        <p>المنظومة الرقمية المتكاملة</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="glass-card">
+            <h2>👤 إضافة سباح جديد</h2>
+            <form action="/add_swimmer" method="post">
+                <input type="text" name="name" placeholder="اسم السباح" required>
+                <input type="number" name="birth_year" placeholder="سنة الميلاد (مثال: 2012)" min="1950" max="2026" required>
+                <button type="submit" class="btn" style="background: #64748b;">تسجيل</button>
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <h2>⏱️ رصد زمن تمرين</h2>
+            <form action="/log_time" method="post">
+                <select name="swimmer_id" required>
+                    <option value="" disabled selected>اختر السباح...</option>
+                    {% for s in all_swimmers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+                </select>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" name="distance" placeholder="المسافة" required>
+                    <select name="stroke">
+                        <option>حرة</option><option>ظهر</option><option>صدر</option><option>دولفين</option>
+                    </select>
+                </div>
+                <input type="number" step="0.01" name="time_seconds" placeholder="الزمن (ث)" required>
+                <textarea name="notes" placeholder="ملاحظات فنية..." style="height: 60px; resize: none;"></textarea>
+                <button type="submit" class="btn">حفظ السجل</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>📊 تحليل الأداء (النشطون)</h2>
+            <input type="text" id="searchBox" placeholder="🔍 ابحث عن اسم..." style="width: 300px; margin: 0;">
+        </div>
+        <div id="activeList">
+            {% for s in active_swimmers %}
+            <div class="swimmer-item">
+                <a href="/report/{{ s.id }}" class="swimmer-row">
+                    <span class="s-name" style="font-weight: 800;">🏊‍♂️ {{ s.name }}</span>
+                    <span style="font-size: 0.8rem; color: var(--accent);">فتح التقرير ←</span>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <h2 style="color: #94a3b8;">📂 قاعدة بيانات السباحين (سنة الميلاد)</h2>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table>
+                <thead>
+                    <tr><th>الاسم</th><th>سنة الميلاد</th><th style="text-align: center;">إجراء</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in all_swimmers %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ s.name }}</td>
+                        <td style="color: #64748b;">{{ s.birthdate }}</td>
+                        <td style="text-align: center;">
+                            <a href="/delete_swimmer/{{ s.id }}" class="del-link" onclick="return confirm('حذف نهائي؟')">🗑️ حذف</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchBox').onkeyup = function() {
+        let val = this.value.toLowerCase();
+        document.querySelectorAll('#activeList .swimmer-item').forEach(item => {
+            let name = item.querySelector('.s-name').innerText.toLowerCase();
+            item.style.display = name.includes(val) ? "flex" : "none";
+        });
+    };
+</script>
+</body>
+</html>
